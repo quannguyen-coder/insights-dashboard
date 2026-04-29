@@ -3,7 +3,7 @@ client_id = ""
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_orders,read_analytics"
+scopes = "write_metaobject_definitions,write_metaobjects,write_products,read_orders,read_analytics"
 
 [app_proxy]
 # Replace this with your current Shopify CLI / tunnel URL before running `shopify app deploy`.
