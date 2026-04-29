@@ -121,6 +121,7 @@ function SalesDashboard({
   ]);
 
   const hasSales = overview.totalOrders > 0;
+  const chartRows = getDailyChartRows(overview);
 
   return (
     <BlockStack gap="600">
@@ -186,6 +187,33 @@ function SalesDashboard({
             <InlineStack align="space-between" blockAlign="center" gap="300">
               <BlockStack gap="100">
                 <Text as="h2" variant="headingMd">
+                  Revenue trend
+                </Text>
+                <Text as="p" tone="subdued">
+                  Daily revenue across the last 30 days.
+                </Text>
+              </BlockStack>
+              <Badge tone="info">Visual chart</Badge>
+            </InlineStack>
+            <Divider />
+            {hasSales ? (
+              <DailyRevenueChart
+                rows={chartRows}
+                currencyCode={overview.currencyCode}
+              />
+            ) : (
+              <SalesEmptyState />
+            )}
+          </BlockStack>
+        </Box>
+      </Card>
+
+      <Card>
+        <Box padding="500">
+          <BlockStack gap="400">
+            <InlineStack align="space-between" blockAlign="center" gap="300">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">
                   Daily sales breakdown
                 </Text>
                 <Text as="p" tone="subdued">
@@ -232,6 +260,132 @@ function SalesDashboard({
           </BlockStack>
         </Box>
       </Card>
+    </BlockStack>
+  );
+}
+
+function DailyRevenueChart({
+  rows,
+  currencyCode,
+}: {
+  rows: SalesOverview["rows"];
+  currencyCode: string;
+}) {
+  const width = 760;
+  const height = 260;
+  const padding = {
+    top: 24,
+    right: 24,
+    bottom: 52,
+    left: 72,
+  };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  const maxRevenue = Math.max(...rows.map((row) => row.revenue), 1);
+  const barGap = 4;
+  const barWidth = Math.max(chartWidth / rows.length - barGap, 4);
+  const gridLines = [0, 0.25, 0.5, 0.75, 1];
+
+  return (
+    <BlockStack gap="300">
+      <Box
+        borderColor="border-secondary"
+        borderRadius="300"
+        borderWidth="025"
+        overflowX="scroll"
+        padding="300"
+      >
+        <svg
+          aria-label="Daily revenue bar chart"
+          height={height}
+          role="img"
+          viewBox={`0 0 ${width} ${height}`}
+          width="100%"
+        >
+          <title>Daily revenue for the last 30 days</title>
+          <desc>
+            Bar chart showing revenue by day for the selected reporting period.
+          </desc>
+          {gridLines.map((line) => {
+            const y = padding.top + chartHeight - chartHeight * line;
+
+            return (
+              <g key={line}>
+                <line
+                  stroke="var(--p-color-border-secondary)"
+                  strokeDasharray={line === 0 ? undefined : "4 4"}
+                  x1={padding.left}
+                  x2={width - padding.right}
+                  y1={y}
+                  y2={y}
+                />
+                <text
+                  fill="var(--p-color-text-subdued)"
+                  fontSize="11"
+                  textAnchor="end"
+                  x={padding.left - 10}
+                  y={y + 4}
+                >
+                  {formatCompactMoney(maxRevenue * line, currencyCode)}
+                </text>
+              </g>
+            );
+          })}
+          {rows.map((row, index) => {
+            const x = padding.left + index * (barWidth + barGap);
+            const barHeight =
+              maxRevenue > 0 ? (row.revenue / maxRevenue) * chartHeight : 0;
+            const y = padding.top + chartHeight - barHeight;
+            const showLabel =
+              index === 0 || index === rows.length - 1 || index % 7 === 0;
+
+            return (
+              <g key={row.date}>
+                <rect
+                  fill="var(--p-color-bg-fill-brand)"
+                  height={Math.max(barHeight, row.revenue > 0 ? 2 : 0)}
+                  rx="3"
+                  width={barWidth}
+                  x={x}
+                  y={row.revenue > 0 ? y : padding.top + chartHeight}
+                >
+                  <title>
+                    {`${formatDate(row.date)}: ${formatMoney(
+                      row.revenue,
+                      currencyCode,
+                    )} from ${row.orders} orders`}
+                  </title>
+                </rect>
+                {showLabel ? (
+                  <text
+                    fill="var(--p-color-text-subdued)"
+                    fontSize="11"
+                    textAnchor="middle"
+                    x={x + barWidth / 2}
+                    y={height - 18}
+                  >
+                    {formatShortDate(row.date)}
+                  </text>
+                ) : null}
+              </g>
+            );
+          })}
+        </svg>
+      </Box>
+      <InlineStack gap="400" wrap>
+        <Text as="p" tone="subdued" variant="bodySm">
+          Peak day:{" "}
+          <Text as="span" fontWeight="semibold">
+            {formatMoney(maxRevenue, currencyCode)}
+          </Text>
+        </Text>
+        <Text as="p" tone="subdued" variant="bodySm">
+          Days shown:{" "}
+          <Text as="span" fontWeight="semibold">
+            {rows.length.toString()}
+          </Text>
+        </Text>
+      </InlineStack>
     </BlockStack>
   );
 }
@@ -314,6 +468,13 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function formatShortDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
@@ -329,6 +490,41 @@ function formatPercent(value: number) {
     style: "percent",
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+function formatCompactMoney(amount: number, currencyCode: string) {
+  return new Intl.NumberFormat("en", {
+    compactDisplay: "short",
+    currency: currencyCode,
+    maximumFractionDigits: 1,
+    notation: "compact",
+    style: "currency",
+  }).format(amount);
+}
+
+function getDailyChartRows(overview: SalesOverview) {
+  const rowsByDate = new Map(overview.rows.map((row) => [row.date, row]));
+  const rows: SalesOverview["rows"] = [];
+  const cursor = new Date(overview.startsAt);
+  const endsAt = new Date(overview.endsAt);
+
+  cursor.setUTCHours(0, 0, 0, 0);
+  endsAt.setUTCHours(0, 0, 0, 0);
+
+  while (cursor <= endsAt) {
+    const date = cursor.toISOString().slice(0, 10);
+    rows.push(
+      rowsByDate.get(date) ?? {
+        date,
+        revenue: 0,
+        orders: 0,
+        aov: 0,
+      },
+    );
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return rows;
 }
 
 function getSalesOverviewError(error: unknown): SalesOverviewError {
