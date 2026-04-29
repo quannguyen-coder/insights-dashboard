@@ -7,7 +7,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json ./
 
 RUN npm ci --omit=dev && npm cache clean --force
 
