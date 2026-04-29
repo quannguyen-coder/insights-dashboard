@@ -25,6 +25,12 @@ import type { SalesOverview } from "../models/sales.server";
 import { getSalesOverview } from "../models/sales.server";
 import { authenticate } from "../shopify.server";
 
+type SalesOverviewError = {
+  title: string;
+  message: string;
+  helpUrl?: string;
+};
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
 
@@ -38,10 +44,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     return {
       overview: null,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unable to load sales data from Shopify.",
+      error: getSalesOverviewError(error),
     };
   }
 };
@@ -57,7 +60,7 @@ export default function Index() {
 
   useEffect(() => {
     if (error) {
-      shopify.toast.show(error, { isError: true });
+      shopify.toast.show(error.title, { isError: true });
       return;
     }
 
@@ -84,7 +87,7 @@ export default function Index() {
         <Layout>
           <Layout.Section>
             <BlockStack gap="500">
-              {error ? <SalesError message={error} /> : null}
+              {error ? <SalesError error={error} /> : null}
               {isLoading && !overview ? <SalesLoading /> : null}
               {overview ? <SalesDashboard overview={overview} /> : null}
             </BlockStack>
@@ -281,10 +284,17 @@ function SalesLoading() {
   );
 }
 
-function SalesError({ message }: { message: string }) {
+function SalesError({ error }: { error: SalesOverviewError }) {
   return (
-    <Banner title="Unable to load sales data" tone="critical">
-      <p>{message}</p>
+    <Banner title={error.title} tone="critical">
+      <p>{error.message}</p>
+      {error.helpUrl ? (
+        <p>
+          <a href={error.helpUrl} target="_blank" rel="noreferrer">
+            Review Shopify protected customer data requirements
+          </a>
+        </p>
+      ) : null}
     </Banner>
   );
 }
@@ -319,6 +329,28 @@ function formatPercent(value: number) {
     style: "percent",
     maximumFractionDigits: 1,
   }).format(value);
+}
+
+function getSalesOverviewError(error: unknown): SalesOverviewError {
+  const fallbackMessage = "Unable to load sales data from Shopify.";
+  const message = error instanceof Error ? error.message : fallbackMessage;
+
+  if (
+    message.includes("not approved to access the Order object") ||
+    message.includes("protected-customer-data")
+  ) {
+    return {
+      title: "Protected customer data access required",
+      message:
+        "Shopify is blocking access to orders until this app is approved for protected customer data. The app already requests read_orders, but Shopify also requires protected data access for the Order object before sales analytics can load.",
+      helpUrl: "https://shopify.dev/docs/apps/launch/protected-customer-data",
+    };
+  }
+
+  return {
+    title: "Unable to load sales data",
+    message,
+  };
 }
 
 export const headers: HeadersFunction = (headersArgs) => {
