@@ -66,14 +66,63 @@ function renderProxyLiquid(shop: string) {
 
   return `
 <section class="insights-dashboard-proxy" aria-labelledby="insights-dashboard-title">
+  <style>
+    .insights-dashboard-proxy {
+      padding: 4rem 0;
+    }
+
+    .insights-dashboard-proxy__card {
+      border: 1px solid rgba(var(--color-foreground), 0.12);
+      border-radius: 1.2rem;
+      padding: clamp(2rem, 4vw, 4rem);
+      background: rgb(var(--color-background));
+    }
+
+    .insights-dashboard-proxy__eyebrow {
+      margin: 0 0 0.75rem;
+      color: rgba(var(--color-foreground), 0.72);
+      font-size: 0.875em;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .insights-dashboard-proxy__title {
+      margin: 0 0 1rem;
+    }
+
+    .insights-dashboard-proxy__copy {
+      max-width: 64rem;
+      margin: 0;
+    }
+
+    .insights-dashboard-proxy__meta {
+      margin-top: 1.5rem;
+      color: rgba(var(--color-foreground), 0.72);
+      font-size: 0.95em;
+    }
+  </style>
+
   <div class="page-width">
-    <h1 id="insights-dashboard-title">{{ shop.name | escape }} insights</h1>
-    <p>This storefront content is served by the Insights Dashboard app for ${escapedShop}.</p>
-    {% if customer %}
-      <p>Signed in as {{ customer.email | escape }}.</p>
-    {% else %}
-      <p>Sign in to your customer account to view personalized storefront insights.</p>
-    {% endif %}
+    <div class="insights-dashboard-proxy__card">
+      <p class="insights-dashboard-proxy__eyebrow">Insights dashboard</p>
+      <h1 class="insights-dashboard-proxy__title" id="insights-dashboard-title">
+        {{ shop.name | escape }} insights
+      </h1>
+      <p class="insights-dashboard-proxy__copy">
+        This secure storefront page is powered by the Insights Dashboard app. The Admin dashboard contains
+        private order and revenue analytics, while this theme page can be used for customer-facing insight content.
+      </p>
+
+      {% if customer %}
+        <p class="insights-dashboard-proxy__meta">
+          Signed in as {{ customer.email | escape }}. Request verified for ${escapedShop}.
+        </p>
+      {% else %}
+        <p class="insights-dashboard-proxy__meta">
+          Sign in to your customer account to unlock personalized storefront content.
+        </p>
+      {% endif %}
+    </div>
   </div>
 </section>
 `;

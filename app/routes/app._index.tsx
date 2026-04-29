@@ -30,6 +30,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       error: null,
     };
   } catch (error) {
+    console.error("Failed to load sales overview", error);
+
     return {
       overview: null,
       error:
@@ -96,6 +98,8 @@ function SalesDashboard({
     formatMoney(row.aov, overview.currencyCode),
   ]);
 
+  const hasSales = overview.totalOrders > 0;
+
   return (
     <BlockStack gap="500">
       <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
@@ -115,19 +119,23 @@ function SalesDashboard({
           <Text as="h2" variant="headingMd">
             Daily sales
           </Text>
-          <DataTable
-            columnContentTypes={["text", "numeric", "numeric", "numeric"]}
-            headings={["Date", "Orders", "Revenue", "AOV"]}
-            rows={rows}
-            totals={[
-              "Total",
-              overview.totalOrders,
-              formatMoney(overview.totalRevenue, overview.currencyCode),
-              formatMoney(overview.aov, overview.currencyCode),
-            ]}
-            hasZebraStripingOnData
-            increasedTableDensity
-          />
+          {hasSales ? (
+            <DataTable
+              columnContentTypes={["text", "numeric", "numeric", "numeric"]}
+              headings={["Date", "Orders", "Revenue", "AOV"]}
+              rows={rows}
+              totals={[
+                "Total",
+                overview.totalOrders,
+                formatMoney(overview.totalRevenue, overview.currencyCode),
+                formatMoney(overview.aov, overview.currencyCode),
+              ]}
+              hasZebraStripingOnData
+              increasedTableDensity
+            />
+          ) : (
+            <SalesEmptyState />
+          )}
           <Text as="p" tone="subdued" variant="bodySm">
             Updated {formatDateTime(overview.generatedAt)}. Cancelled orders are
             excluded from these totals.
@@ -135,6 +143,17 @@ function SalesDashboard({
         </BlockStack>
       </Card>
     </BlockStack>
+  );
+}
+
+function SalesEmptyState() {
+  return (
+    <Banner title="No sales found in the last 30 days" tone="info">
+      <p>
+        Once this store receives paid orders, the daily sales table will show
+        revenue, order count, and average order value here.
+      </p>
+    </Banner>
   );
 }
 
