@@ -1,47 +1,31 @@
-# This file stores configurations for your Shopify app.
-client_id = ""
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "2c061f359f67e51b670a7050eaeb1766"
+name = "insights-dashboard"
+application_url = "https://insights-dashboard-pnj0.onrender.com"
+embedded = true
+
+[webhooks]
+api_version = "2026-07"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "https://example.com/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "https://example.com/webhooks/app/uninstalled"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_metaobject_definitions,write_metaobjects,write_products,read_orders,read_analytics"
+scopes = "read_analytics,write_metaobject_definitions,write_metaobjects,read_orders,write_products"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ "https://insights-dashboard-pnj0.onrender.com/api/auth" ]
 
 [app_proxy]
-# Replace this with your current Shopify CLI / tunnel URL before running `shopify app deploy`.
 url = "https://insights-dashboard-pnj0.onrender.com/proxy"
 subpath = "insights"
 prefix = "apps"
-
-[webhooks]
-api_version = "2025-10"
-
-  # Handled by: /app/routes/webhooks.app.uninstalled.tsx
-  [[webhooks.subscriptions]]
-  uri = "/webhooks/app/uninstalled"
-  topics = ["app/uninstalled"]
-
-  # Handled by: /app/routes/webhooks.app.scopes_update.tsx
-  [[webhooks.subscriptions]]
-  topics = [ "app/scopes_update" ]
-  uri = "/webhooks/app/scopes_update"
-
-  # Webhooks can have filters
-  # Only receive webhooks for product updates with a product price >= 10.00
-  # See: https://shopify.dev/docs/apps/build/webhooks/customize/filters
-  # [[webhooks.subscriptions]]
-  # topics = ["products/update"]
-  # uri = "/webhooks/products/update"
-  # filter = "variants.price:>=10.00"
-
-  # Mandatory compliance topic for public apps only
-  # See: https://shopify.dev/docs/apps/build/privacy-law-compliance
-  # [[webhooks.subscriptions]]
-  # uri = "/webhooks/customers/data_request"
-  # compliance_topics = ["customers/data_request"]
-
-  # [[webhooks.subscriptions]]
-  # uri = "/webhooks/customers/redact"
-  # compliance_topics = ["customers/redact"]
-
-  # [[webhooks.subscriptions]]
-  # uri = "/webhooks/shop/redact"
-  # compliance_topics = ["shop/redact"]
