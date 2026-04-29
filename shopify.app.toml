@@ -7,7 +7,7 @@ scopes = "read_orders,read_analytics"
 
 [app_proxy]
 # Replace this with your current Shopify CLI / tunnel URL before running `shopify app deploy`.
-url = "https://replace-with-your-tunnel-url.com/proxy"
+url = "https://insights-dashboard-pnj0.onrender.com/proxy"
 subpath = "insights"
 prefix = "apps"
 
